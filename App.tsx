@@ -80,8 +80,18 @@ const App: React.FC = () => {
 
   // Calculated state for notifications
   const pendingUserCount = users.filter(u => u.status === 'pending').length;
-  // Mock current user (usually comes from Auth Context)
-  const currentUser = users[0];
+  
+  // Mock current user (Safe fallback)
+  // In a real app, this would be determined by authentication
+  const currentUser = users.length > 0 ? users[0] : {
+    id: 'admin-fallback',
+    name: 'Admin Sistema',
+    email: 'admin@system',
+    role: UserRole.ADMIN,
+    avatar: '',
+    status: 'active',
+    createdAt: Date.now()
+  } as User;
 
   // Update document title based on active page
   useEffect(() => {
@@ -125,7 +135,7 @@ const App: React.FC = () => {
       name,
       email,
       role: UserRole.ADMIN,
-      avatar: `https://picsum.photos/seed/${name}/200`,
+      avatar: `https://picsum.photos/seed/${encodeURIComponent(name)}/200`,
       status: 'active',
       createdAt: Date.now()
     };
@@ -134,10 +144,7 @@ const App: React.FC = () => {
 
   const handleClearData = () => {
     setPhotos([]);
-    // Optionally keep the first admin or clear all users too. 
-    // Here we clear all users except the currently logged in concept (mocked as index 0 for now) to prevent lockout in a real app,
-    // but per request "Apagar Dados" usually implies everything. 
-    // We will keep the default Admin (first user) so the app is usable.
+    // Reset users but keep the initial admin to prevent lockout in this demo environment
     setUsers([INITIAL_USERS[0]]); 
   };
 
@@ -147,7 +154,7 @@ const App: React.FC = () => {
       case 'dashboard':
         return <Dashboard photos={photos} users={users} />;
       case 'collection':
-        return <Collection onAddPhoto={handleAddPhoto} userId={INITIAL_USERS[0].id} />;
+        return <Collection onAddPhoto={handleAddPhoto} userId={currentUser.id} />;
       case 'users':
         return <UsersPage users={users} onAddUser={handleAddUser} onRemoveUser={handleRemoveUser} onUpdateUserStatus={handleUpdateUserStatus} />;
       case 'reports':

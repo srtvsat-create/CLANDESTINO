@@ -23,7 +23,7 @@ const UsersPage: React.FC<UsersProps> = ({ users, onAddUser, onRemoveUser, onUpd
       name: newUser.name,
       email: newUser.email,
       role: newUser.role,
-      avatar: `https://picsum.photos/seed/${newUser.name}/200`,
+      avatar: `https://picsum.photos/seed/${encodeURIComponent(newUser.name)}/200`,
       status: 'pending', // Default to pending for approval
       createdAt: Date.now()
     });

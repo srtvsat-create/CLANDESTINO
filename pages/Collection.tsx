@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Upload, X, Loader2, Tag, CheckCircle, Car, AlertCircle, AlertTriangle, Save, RefreshCw, FileWarning } from 'lucide-react';
 import { PhotoEntry } from '../types';
 import { analyzePhoto } from '../services/geminiService';
@@ -26,6 +26,16 @@ const Collection: React.FC<CollectionProps> = ({ onAddPhoto, userId }) => {
   } | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Effect to handle completion of upload simulation
+  useEffect(() => {
+    if (status === 'saving' && uploadProgress >= 100) {
+      const timer = setTimeout(() => {
+        finalizeSave();
+      }, 500); // Small delay for visual completion
+      return () => clearTimeout(timer);
+    }
+  }, [uploadProgress, status]);
 
   const resetState = () => {
     setStatus('idle');
@@ -110,7 +120,6 @@ const Collection: React.FC<CollectionProps> = ({ onAddPhoto, userId }) => {
         setUploadProgress(prev => {
             if (prev >= 100) {
                 clearInterval(interval);
-                finalizeSave();
                 return 100;
             }
             return prev + 10;
@@ -119,6 +128,7 @@ const Collection: React.FC<CollectionProps> = ({ onAddPhoto, userId }) => {
   };
 
   const finalizeSave = () => {
+    // Ensure we have data (double check, though status flow prevents this)
     if (!preview || !analysisResult) return;
 
     const newPhoto: PhotoEntry = {
