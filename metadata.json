@@ -1,0 +1,7 @@
+{
+  "name": "cland Photo SRTV",
+  "description": "Uma plataforma inteligente para coleta de fotos, gestão de fluxo de dados e relatórios automatizados com IA.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
