@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Camera, Users, FileText, Menu, X, Skull, Lock, ShieldAlert, Trash2, Plus, Check } from 'lucide-react';
+import { LayoutDashboard, Camera, Users, FileText, Menu, X, Skull, Lock, ShieldAlert, Trash2, Plus, Check, AlertTriangle, ArrowRight } from 'lucide-react';
+import { User, UserRole } from '../types';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -7,9 +8,11 @@ interface LayoutProps {
   onNavigate: (page: string) => void;
   onAddAdmin: (name: string, email: string) => void;
   onClearData: () => void;
+  pendingUserCount: number;
+  currentUser: User;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate, onAddAdmin, onClearData }) => {
+const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate, onAddAdmin, onClearData, pendingUserCount, currentUser }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Secret Menu States
@@ -113,7 +116,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate, onAdd
                 setIsMobileMenuOpen(false);
               }}
               className={`
-                w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
+                w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative
                 ${activePage === item.id 
                   ? 'bg-blue-600 text-white shadow-lg' 
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'}
@@ -121,6 +124,13 @@ const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate, onAdd
             >
               <item.icon size={20} />
               <span className="font-medium">{item.label}</span>
+              
+              {/* Notification Badge for Users */}
+              {item.id === 'users' && pendingUserCount > 0 && (
+                <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse shadow-sm">
+                  {pendingUserCount}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -129,13 +139,13 @@ const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate, onAdd
         <div className="p-4 border-t border-slate-800">
           <div className="flex items-center gap-3 mb-4">
             <img 
-              src="https://picsum.photos/40/40" 
+              src={currentUser.avatar || "https://picsum.photos/40/40"} 
               alt="User" 
-              className="w-10 h-10 rounded-full border-2 border-slate-600"
+              className="w-10 h-10 rounded-full border-2 border-slate-600 object-cover"
             />
-            <div>
-              <p className="text-sm font-semibold">Admin User</p>
-              <p className="text-xs text-slate-400">admin@clandphoto.ai</p>
+            <div className="overflow-hidden">
+              <p className="text-sm font-semibold truncate">{currentUser.name}</p>
+              <p className="text-xs text-slate-400 truncate">{currentUser.role}</p>
             </div>
           </div>
           
@@ -159,9 +169,12 @@ const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate, onAdd
         <header className="lg:hidden bg-white shadow-sm p-4 flex items-center justify-between no-print">
           <button 
             onClick={() => setIsMobileMenuOpen(true)}
-            className="text-slate-600 hover:text-slate-900"
+            className="text-slate-600 hover:text-slate-900 relative"
           >
             <Menu size={24} />
+            {pendingUserCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
+            )}
           </button>
           <div className="flex items-center gap-2">
             <Skull className="w-5 h-5 text-slate-800" />
@@ -169,6 +182,26 @@ const Layout: React.FC<LayoutProps> = ({ children, activePage, onNavigate, onAdd
           </div>
           <div className="w-6" /> {/* Spacer */}
         </header>
+
+        {/* Admin Notification Banner */}
+        {activePage === 'dashboard' && currentUser.role === UserRole.ADMIN && pendingUserCount > 0 && (
+           <div className="bg-amber-50 border-b border-amber-200 px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in slide-in-from-top duration-300 no-print">
+              <div className="flex items-center gap-3">
+                 <div className="bg-amber-100 p-1.5 rounded-full text-amber-600">
+                    <AlertTriangle size={16} />
+                 </div>
+                 <p className="text-sm text-amber-900 font-medium">
+                    Existem <span className="font-bold">{pendingUserCount}</span> usuários aguardando aprovação.
+                 </p>
+              </div>
+              <button 
+                 onClick={() => onNavigate('users')}
+                 className="text-xs font-bold text-amber-700 hover:text-amber-900 hover:underline flex items-center gap-1"
+              >
+                 Gerenciar Acessos <ArrowRight size={12} />
+              </button>
+           </div>
+        )}
 
         {/* Scrollable Content Area */}
         <main className="flex-1 overflow-auto p-4 lg:p-8 relative">

@@ -78,6 +78,11 @@ const App: React.FC = () => {
   const [users, setUsers] = useState<User[]>(INITIAL_USERS);
   const [photos, setPhotos] = useState<PhotoEntry[]>(INITIAL_PHOTOS);
 
+  // Calculated state for notifications
+  const pendingUserCount = users.filter(u => u.status === 'pending').length;
+  // Mock current user (usually comes from Auth Context)
+  const currentUser = users[0];
+
   // Update document title based on active page
   useEffect(() => {
     const titles: Record<string, string> = {
@@ -159,6 +164,8 @@ const App: React.FC = () => {
       onNavigate={setActivePage}
       onAddAdmin={handleAddAdmin}
       onClearData={handleClearData}
+      pendingUserCount={pendingUserCount}
+      currentUser={currentUser}
     >
       {renderPage()}
     </Layout>
