@@ -15,7 +15,12 @@ const INITIAL_USERS: User[] = [
     role: UserRole.ADMIN, 
     avatar: 'https://picsum.photos/seed/ana/200', 
     status: 'active',
-    createdAt: Date.now() - 10000000
+    createdAt: Date.now() - 10000000,
+    accessLogs: [
+        Date.now() - 120000, 
+        Date.now() - 86400000, 
+        Date.now() - 172800000
+    ]
   },
   { 
     id: '2', 
@@ -24,7 +29,11 @@ const INITIAL_USERS: User[] = [
     role: UserRole.COLLECTOR, 
     avatar: 'https://picsum.photos/seed/carlos/200', 
     status: 'active',
-    createdAt: Date.now() - 5000000
+    createdAt: Date.now() - 5000000,
+    accessLogs: [
+        Date.now() - 3600000, 
+        Date.now() - 4000000
+    ]
   },
   { 
     id: '3', 
@@ -33,7 +42,8 @@ const INITIAL_USERS: User[] = [
     role: UserRole.VIEWER, 
     avatar: 'https://picsum.photos/seed/bia/200', 
     status: 'pending', // Example of a pending user
-    createdAt: Date.now() - 3600000
+    createdAt: Date.now() - 3600000,
+    accessLogs: []
   },
 ];
 
@@ -137,7 +147,8 @@ const App: React.FC = () => {
       role: UserRole.ADMIN,
       avatar: `https://picsum.photos/seed/${encodeURIComponent(name)}/200`,
       status: 'active',
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      accessLogs: []
     };
     setUsers(prev => [...prev, newAdmin]);
   };

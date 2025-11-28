@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
-import { Plus, Trash2, Shield, User as UserIcon, Lock, Unlock, AlertTriangle, Clock, Calendar } from 'lucide-react';
+import { Plus, Trash2, Shield, User as UserIcon, Lock, Unlock, AlertTriangle, Clock, Calendar, ChevronDown, ChevronUp, History } from 'lucide-react';
 
 interface UsersProps {
   users: User[];
   onAddUser: (user: User) => void;
   onRemoveUser: (id: string) => void;
-  onUpdateUserStatus: (id: string, status: User['status']) => void; // New prop
+  onUpdateUserStatus: (id: string, status: User['status']) => void;
 }
 
 const UsersPage: React.FC<UsersProps> = ({ users, onAddUser, onRemoveUser, onUpdateUserStatus }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', role: UserRole.COLLECTOR });
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
 
   const pendingUsers = users.filter(u => u.status === 'pending');
 
@@ -25,10 +26,15 @@ const UsersPage: React.FC<UsersProps> = ({ users, onAddUser, onRemoveUser, onUpd
       role: newUser.role,
       avatar: `https://picsum.photos/seed/${encodeURIComponent(newUser.name)}/200`,
       status: 'pending', // Default to pending for approval
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      accessLogs: []
     });
     setNewUser({ name: '', email: '', role: UserRole.COLLECTOR });
     setIsModalOpen(false);
+  };
+
+  const toggleExpand = (userId: string) => {
+    setExpandedUserId(expandedUserId === userId ? null : userId);
   };
 
   const getStatusBadge = (status: User['status']) => {
@@ -102,76 +108,118 @@ const UsersPage: React.FC<UsersProps> = ({ users, onAddUser, onRemoveUser, onUpd
           </thead>
           <tbody className="divide-y divide-gray-100">
             {users.map((user) => (
-              <tr key={user.id} className={`hover:bg-gray-50/50 transition-colors ${user.status === 'pending' ? 'bg-amber-50/30' : ''}`}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center gap-3">
-                    <img src={user.avatar} alt="" className="w-10 h-10 rounded-full bg-gray-200 object-cover" />
-                    <div>
-                      <p className="font-medium text-gray-900">{user.name}</p>
-                      <p className="text-sm text-gray-500">{user.email}</p>
+              <React.Fragment key={user.id}>
+                <tr 
+                  className={`hover:bg-gray-50/50 transition-colors cursor-pointer group ${user.status === 'pending' ? 'bg-amber-50/30' : ''}`}
+                  onClick={() => toggleExpand(user.id)}
+                >
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center gap-3">
+                      <div className="text-gray-400 group-hover:text-blue-500 transition-colors">
+                        {expandedUserId === user.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      </div>
+                      <img src={user.avatar} alt="" className="w-10 h-10 rounded-full bg-gray-200 object-cover" />
+                      <div>
+                        <p className="font-medium text-gray-900">{user.name}</p>
+                        <p className="text-sm text-gray-500">{user.email}</p>
+                      </div>
                     </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
-                    user.role === UserRole.ADMIN 
-                      ? 'bg-purple-50 text-purple-700 border-purple-200' 
-                      : 'bg-blue-50 text-blue-700 border-blue-200'
-                  }`}>
-                    {user.role === UserRole.ADMIN ? <Shield size={12} /> : <UserIcon size={12} />}
-                    {user.role}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex flex-col text-xs text-gray-500">
-                     <span className="flex items-center gap-1 font-medium text-gray-700">
-                        <Calendar size={12} />
-                        {new Date(user.createdAt).toLocaleDateString()}
-                     </span>
-                     <span className="flex items-center gap-1 mt-1">
-                        <Clock size={12} />
-                        {new Date(user.createdAt).toLocaleTimeString()}
-                     </span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                   {getStatusBadge(user.status)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    {/* Permission Button */}
-                    {user.status !== 'active' ? (
-                        <button
-                            onClick={() => onUpdateUserStatus(user.id, 'active')}
-                            className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors border border-green-200"
-                            title="Conceder Permissão de Acesso"
-                        >
-                            <Unlock size={14} />
-                            Liberar Acesso
-                        </button>
-                    ) : (
-                        <button
-                            onClick={() => onUpdateUserStatus(user.id, 'inactive')}
-                            className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors border border-gray-200"
-                            title="Revogar Permissão"
-                        >
-                            <Lock size={14} />
-                            Bloquear
-                        </button>
-                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
+                      user.role === UserRole.ADMIN 
+                        ? 'bg-purple-50 text-purple-700 border-purple-200' 
+                        : 'bg-blue-50 text-blue-700 border-blue-200'
+                    }`}>
+                      {user.role === UserRole.ADMIN ? <Shield size={12} /> : <UserIcon size={12} />}
+                      {user.role}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex flex-col text-xs text-gray-500">
+                       <span className="flex items-center gap-1 font-medium text-gray-700">
+                          <Calendar size={12} />
+                          {new Date(user.createdAt).toLocaleDateString()}
+                       </span>
+                       <span className="flex items-center gap-1 mt-1">
+                          <Clock size={12} />
+                          {new Date(user.createdAt).toLocaleTimeString()}
+                       </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                     {getStatusBadge(user.status)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-end gap-2">
+                      {/* Permission Button */}
+                      {user.status !== 'active' ? (
+                          <button
+                              onClick={() => onUpdateUserStatus(user.id, 'active')}
+                              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors border border-green-200"
+                              title="Conceder Permissão de Acesso"
+                          >
+                              <Unlock size={14} />
+                              Liberar Acesso
+                          </button>
+                      ) : (
+                          <button
+                              onClick={() => onUpdateUserStatus(user.id, 'inactive')}
+                              className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors border border-gray-200"
+                              title="Revogar Permissão"
+                          >
+                              <Lock size={14} />
+                              Bloquear
+                          </button>
+                      )}
 
-                    <div className="h-4 w-px bg-gray-300 mx-1"></div>
+                      <div className="h-4 w-px bg-gray-300 mx-1"></div>
 
-                    <button 
-                      onClick={() => onRemoveUser(user.id)}
-                      className="text-gray-400 hover:text-red-600 transition-colors p-1.5 hover:bg-red-50 rounded-lg"
-                      title="Excluir Usuário"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
+                      <button 
+                        onClick={() => onRemoveUser(user.id)}
+                        className="text-gray-400 hover:text-red-600 transition-colors p-1.5 hover:bg-red-50 rounded-lg"
+                        title="Excluir Usuário"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {/* Expandable History Section */}
+                {expandedUserId === user.id && (
+                  <tr className="bg-gray-50 shadow-inner">
+                    <td colSpan={5} className="px-6 py-4">
+                      <div className="ml-16 border-l-2 border-gray-200 pl-6 space-y-3">
+                        <h4 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                          <History size={16} className="text-blue-500" />
+                          Histórico de Acesso Recente
+                        </h4>
+                        
+                        {user.accessLogs && user.accessLogs.length > 0 ? (
+                           <ul className="space-y-2">
+                              {user.accessLogs.map((log, index) => (
+                                <li key={index} className="text-xs text-gray-600 flex items-center gap-3">
+                                  <span className="w-2 h-2 rounded-full bg-blue-300"></span>
+                                  <span className="font-mono bg-white px-2 py-0.5 rounded border border-gray-200">
+                                    {new Date(log).toLocaleDateString()}
+                                  </span>
+                                  <span className="text-gray-500">
+                                    {new Date(log).toLocaleTimeString()}
+                                  </span>
+                                  <span className="text-gray-400 italic">
+                                     - Acesso via Web App
+                                  </span>
+                                </li>
+                              ))}
+                           </ul>
+                        ) : (
+                           <p className="text-xs text-gray-400 italic">Nenhum registro de acesso recente disponível.</p>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
             ))}
           </tbody>
         </table>

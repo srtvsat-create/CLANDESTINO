@@ -13,6 +13,7 @@ export interface User {
   status: 'active' | 'inactive' | 'pending';
   createdAt: number;
   lastAccess?: number;
+  accessLogs?: number[]; // Array of timestamps representing recent logins/actions
 }
 
 export interface PhotoEntry {
