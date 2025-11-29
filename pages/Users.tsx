@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
-import { Plus, Trash2, Shield, User as UserIcon, Lock, Unlock, AlertTriangle, Clock, Calendar, ChevronDown, ChevronUp, History } from 'lucide-react';
+import { Plus, Trash2, Shield, User as UserIcon, Lock, Unlock, AlertTriangle, Clock, Calendar, ChevronDown, ChevronUp, History, X } from 'lucide-react';
 
 interface UsersProps {
   users: User[];
@@ -13,6 +13,9 @@ const UsersPage: React.FC<UsersProps> = ({ users, onAddUser, onRemoveUser, onUpd
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', role: UserRole.COLLECTOR });
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+  
+  // State for delete confirmation
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
   const pendingUsers = users.filter(u => u.status === 'pending');
 
@@ -31,6 +34,13 @@ const UsersPage: React.FC<UsersProps> = ({ users, onAddUser, onRemoveUser, onUpd
     });
     setNewUser({ name: '', email: '', role: UserRole.COLLECTOR });
     setIsModalOpen(false);
+  };
+
+  const confirmDelete = () => {
+    if (userToDelete) {
+      onRemoveUser(userToDelete);
+      setUserToDelete(null);
+    }
   };
 
   const toggleExpand = (userId: string) => {
@@ -176,7 +186,7 @@ const UsersPage: React.FC<UsersProps> = ({ users, onAddUser, onRemoveUser, onUpd
                       <div className="h-4 w-px bg-gray-300 mx-1"></div>
 
                       <button 
-                        onClick={() => onRemoveUser(user.id)}
+                        onClick={() => setUserToDelete(user.id)}
                         className="text-gray-400 hover:text-red-600 transition-colors p-1.5 hover:bg-red-50 rounded-lg"
                         title="Excluir Usuário"
                       >
@@ -225,13 +235,49 @@ const UsersPage: React.FC<UsersProps> = ({ users, onAddUser, onRemoveUser, onUpd
         </table>
       </div>
 
+      {/* Delete Confirmation Modal */}
+      {userToDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+             <div className="p-6 text-center">
+                <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                   <Trash2 size={32} />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Excluir Usuário?</h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  Esta ação removerá o acesso deste usuário permanentemente. O histórico de coletas será mantido, mas desvinculado.
+                </p>
+                <div className="flex gap-3">
+                   <button 
+                      onClick={() => setUserToDelete(null)}
+                      className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                   >
+                      Cancelar
+                   </button>
+                   <button 
+                      onClick={confirmDelete}
+                      className="flex-1 px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"
+                   >
+                      Sim, Excluir
+                   </button>
+                </div>
+             </div>
+          </div>
+        </div>
+      )}
+
       {/* Add User Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-            <div className="p-6 border-b border-gray-100">
-              <h3 className="text-lg font-bold text-gray-900">Adicionar Novo Usuário</h3>
-              <p className="text-sm text-gray-500">O usuário será criado como "Pendente" até a aprovação.</p>
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Adicionar Novo Usuário</h3>
+                <p className="text-sm text-gray-500">O usuário será criado como "Pendente".</p>
+              </div>
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                <X size={24} />
+              </button>
             </div>
             <div className="p-6 space-y-4">
               <div>
